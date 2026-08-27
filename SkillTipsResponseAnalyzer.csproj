@@ -1,17 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <IsUraPlugin>true</IsUraPlugin>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
     <Version>2026.3.9</Version>
-  </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\UmamusumeResponseAnalyzer\UmamusumeResponseAnalyzer\UmamusumeResponseAnalyzer.csproj" />
-    <ProjectReference Include="..\EventLoggerPlugin\EventLoggerPlugin.csproj" />
-  </ItemGroup>
+    <!-- URA 插件元数据 -->
+    <PluginInternalName>SkillTipsResponseAnalyzer</PluginInternalName>
+    <PluginDisplayName>育成结束时给出评分最大化的技能点法</PluginDisplayName>
+    <PluginAuthor>离披&amp;Github Contributors</PluginAuthor>
+    <PluginDescription>有时候会有1~10分的误差，数据更新不及时会不准，精度不高仅供参考</PluginDescription>
+    <PluginRepositoryUrl>https://github.com/URA-Plugins/SkillTipsResponseAnalyzer</PluginRepositoryUrl>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Update="i18n\ParseSkillTipsResponse.Designer.cs">
@@ -27,15 +29,5 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="manifest.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;%25localappdata%25/UmamusumeResponseAnalyzer/Plugins/SkillTipsResponseAnalyzer/&quot;" />
-  </Target>
 
 </Project>

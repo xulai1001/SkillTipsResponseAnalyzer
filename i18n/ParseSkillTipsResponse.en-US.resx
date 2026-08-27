@@ -124,7 +124,7 @@
     <value>Evaluation points</value>
   </data>
   <data name="I18N_Columns_RequireSP" xml:space="preserve">
-    <value>Required skill points</value>
+    <value>Skill points</value>
   </data>
   <data name="I18N_Columns_SkillName" xml:space="preserve">
     <value>Skill name</value>
@@ -136,31 +136,31 @@
     <value>Due to some skills not meeting the evolution conditions, this result is based on &lt;maximized recommendation when some skills cannot evolve&gt; for recalculation</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_3" xml:space="preserve">
-    <value>[yellow]2. Purple (negative) skills not considered, please remove purple skills yourself [/]</value>
+    <value>2. Purple (negative) skills not considered, please remove purple skills yourself</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_4" xml:space="preserve">
-    <value>[red]You can decide whether to buy the corresponding skills for the above situations. After buying, restart the game for recalculation [/]</value>
+    <value>You can decide whether to buy the corresponding skills for the above situations. After buying, restart the game for recalculation</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_5" xml:space="preserve">
-    <value>[red]Below are some reference indicators [/]</value>
+    <value>Below are some reference indicators</value>
   </data>
   <data name="I18N_AverageCostEffectiveness" xml:space="preserve">
-    <value>[aqua]Average cost-effectiveness: {0}[/]</value>
+    <value>Average cost-effectiveness: {0}</value>
   </data>
   <data name="I18N_MarginalCostEffectiveness" xml:space="preserve">
-    <value>[aqua]Marginal cost-effectiveness: {0}[/]</value>
+    <value>Marginal cost-effectiveness: {0}</value>
   </data>
   <data name="I18N_ExpectedCostEffectiveness" xml:space="preserve">
-    <value>[aqua]The expected cost-effectiveness of skills at different prices is as follows. If the score of a skill is calculated incorrectly and is low and not listed above (in the above situations), please manually calculate the cost-effectiveness and compare with the table below[/]</value>
+    <value>The expected cost-effectiveness of skills at different prices is as follows. If the score of a skill is calculated incorrectly and is low and not listed above (in the above situations), please manually calculate the cost-effectiveness and compare with the table below</value>
   </data>
   <data name="I18N_ExpectedCostEffectivenessByPrice" xml:space="preserve">
-    <value>[green]Expected cost-effectiveness of {0}pt skill: {1}[/]</value>
+    <value>Expected cost-effectiveness of {0}pt skill: {1}</value>
   </data>
   <data name="I18N_Evolved" xml:space="preserve">
     <value>Evolution</value>
   </data>
   <data name="I18N_EvolveSkillAlert_2" xml:space="preserve">
-    <value>And after recalculation, the total score [green]exceeds[/] the result when unable to evolve, please ensure to learn skills as recommended after both talent skills meet the evolution conditions</value>
+    <value>And after recalculation, the total score exceeds the result when unable to evolve, please ensure to learn skills as recommended after both talent skills meet the evolution conditions</value>
   </data>
   <data name="I18N_EvolveSkillAlert_3" xml:space="preserve">
     <value>If you see this prompt, open the option of "save communication packets for debugging" then re-enter the upbringing interface</value>
@@ -172,16 +172,16 @@
     <value>Due to some skills not meeting the evolution conditions, this result is based on &lt;maximized recommendation when some skills cannot evolve&gt; for recalculation</value>
   </data>
   <data name="I18N_EvolveSkillAlert_6" xml:space="preserve">
-    <value>And after recalculation, the total score [red]is below[/] the result when unable to evolve, therefore, recommendations are given as (all/part) skills cannot evolve</value>
+    <value>And after recalculation, the total score is below the result when unable to evolve, therefore, recommendations are given as (all/part) skills cannot evolve</value>
   </data>
   <data name="I18N_ScoreToNextGrade" xml:space="preserve">
-    <value>{0} is [yellow]{1}[/] points away</value>
+    <value>{0} is {1} points away</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_1" xml:space="preserve">
-    <value>[yellow]Known issues [/]</value>
+    <value>Known issues</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_2" xml:space="preserve">
-    <value>[yellow]1. For skills that can only be judged whether they can evolve after learning, it may not be correctly judged. If there are evolvable skills that have not evolved above, please judge for yourself [/]</value>
+    <value>1. For skills that can only be judged whether they can evolve after learning, it may not be correctly judged. If there are evolvable skills that have not evolved above, please judge for yourself</value>
   </data>
   <data name="I18N_UnknownSkillAlert" xml:space="preserve">
     <value>Warning: Unknown skill, group_id={0}, rarity={1}</value>
@@ -190,12 +190,63 @@
     <value>, might be the superior skill of {0}</value>
   </data>
   <data name="I18N_UnknownBoughtSkillAlert" xml:space="preserve">
-    <value>[red]Warning: Unknown purchased skill, id={0}[/]</value>
+    <value>Warning: Unknown purchased skill, id={0}</value>
   </data>
   <data name="I18N_UnknownUma" xml:space="preserve">
-    <value>[red]Unknown Uma Musume: {0}, unable to obtain awakening skills, please decide whether to buy yourself.[/]</value>
+    <value>Unknown Uma Musume: {0}, unable to obtain awakening skills, please decide whether to buy yourself.</value>
   </data>
   <data name="I18N_UnknownSkillExistAlert" xml:space="preserve">
-    <value>[red]Warning: There are unknown skills[/]</value>
+    <value>Warning: There are unknown skills</value>
+  </data>
+  <data name="I18N_RecommendedSkills" xml:space="preserve">
+    <value>Recommended skills</value>
+  </data>
+  <data name="I18N_ScoreSummary" xml:space="preserve">
+    <value>Score summary</value>
+  </data>
+  <data name="I18N_CostEffectiveness" xml:space="preserve">
+    <value>Cost-effectiveness</value>
+  </data>
+  <data name="I18N_Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="I18N_Stamina" xml:space="preserve">
+    <value>Stamina</value>
+  </data>
+  <data name="I18N_Power" xml:space="preserve">
+    <value>Power</value>
+  </data>
+  <data name="I18N_Guts" xml:space="preserve">
+    <value>Guts</value>
+  </data>
+  <data name="I18N_Wisdom" xml:space="preserve">
+    <value>Wisdom</value>
+  </data>
+  <data name="I18N_TotalSkillPoints" xml:space="preserve">
+    <value>Total skill points</value>
+  </data>
+  <data name="I18N_UsedSkillPoints" xml:space="preserve">
+    <value>Used skill points</value>
+  </data>
+  <data name="I18N_RemainingSkillPoints" xml:space="preserve">
+    <value>Remaining skill points</value>
+  </data>
+  <data name="I18N_LearnedSkillScore" xml:space="preserve">
+    <value>Learned skill score</value>
+  </data>
+  <data name="I18N_RecommendedSkillScore" xml:space="preserve">
+    <value>Upcoming skill score</value>
+  </data>
+  <data name="I18N_StatusScore" xml:space="preserve">
+    <value>Attribute score</value>
+  </data>
+  <data name="I18N_PredictedTotalScore" xml:space="preserve">
+    <value>Predicted total score</value>
+  </data>
+  <data name="I18N_CurrentRank" xml:space="preserve">
+    <value>Current rank</value>
+  </data>
+  <data name="I18N_PredictedRank" xml:space="preserve">
+    <value>Predicted rank</value>
   </data>
 </root>

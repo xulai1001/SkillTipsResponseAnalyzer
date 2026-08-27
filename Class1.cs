@@ -1,12 +1,6 @@
-﻿using EventLoggerPlugin;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Spectre.Console;
-using System.Diagnostics;
-using System.IO.Compression;
 using UmamusumeResponseAnalyzer;
 using UmamusumeResponseAnalyzer.Entities;
-using UmamusumeResponseAnalyzer.Game;
+using UmamusumeResponseAnalyzer.TerminalGui;
 using UmamusumeResponseAnalyzer.Plugin;
 using static SkillTipsResponseAnalyzer.i18n.ParseSkillTipsResponse;
 
@@ -14,114 +8,119 @@ namespace SkillTipsResponseAnalyzer
 {
     public class SkillTipsResponseAnalyzer : IPlugin
     {
-        [PluginDescription("育成结束时给出评分最大化的技能点法")]
-        public string Name => "SkillTipsResponseAnalyzer";
-        public string Author => "离披&Github Contributors";
-        public string[] Targets => [];
-        private JsonSerializer Serializer { get; } = JsonSerializer.Create(new JsonSerializerSettings { Error = IgnoreDeserializeError });
+        const string WorkspaceTitle = "SkillTipsResponseAnalyzer";
 
-        public async Task UpdatePlugin(ProgressContext ctx)
+        readonly object trainingGate = new();
+        Workspace? workspace;
+
+        public void Initialize(IPluginContext context)
         {
-            var progress = ctx.AddTask($"[[{Name}]] 更新");
-
-            using var client = new HttpClient();
-            using var resp = await client.GetAsync($"https://api.github.com/repos/URA-Plugins/{Name}/releases/latest");
-            var json = await resp.Content.ReadAsStringAsync();
-            var jo = JObject.Parse(json);
-
-            var isLatest = ("v" + ((IPlugin)this).Version.ToString()).Equals("v" + jo["tag_name"]?.ToString());
-            if (isLatest)
-            {
-                progress.Increment(progress.MaxValue);
-                progress.StopTask();
-                return;
-            }
-            progress.Increment(25);
-
-            var downloadUrl = jo["assets"][0]["browser_download_url"].ToString();
-            if (Config.Updater.IsGithubBlocked && !Config.Updater.ForceUseGithubToUpdate)
-            {
-                downloadUrl = downloadUrl.Replace("https://", "https://gh.shuise.dev/");
-            }
-            using var msg = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
-            using var stream = await msg.Content.ReadAsStreamAsync();
-            var buffer = new byte[8192];
-            while (true)
-            {
-                var read = await stream.ReadAsync(buffer);
-                if (read == 0)
-                    break;
-                progress.Increment(read / msg.Content.Headers.ContentLength ?? 1 * 0.5);
-            }
-            using var archive = new ZipArchive(stream);
-            archive.ExtractToDirectory(Path.Combine("Plugins", Name), true);
-            progress.Increment(25);
-
-            progress.StopTask();
-        }
-        [Analyzer]
-        public void Analyze(JObject jo)
-        {
-            if (!jo.HasCharaInfo()) return;
-            if (jo["data"] is null || jo["data"] is not JObject data) return;
-            if (data["chara_info"] is null || data["chara_info"] is not JObject chara_info) return;
-            var state = chara_info["state"].ToInt();
-            if (state is 2 or 3 && data["unchecked_event_array"]?.Count() == 0)
-            {
-                ParseSkillTipsResponse(jo.ToObject<Gallop.SingleModeCheckEventResponse>(Serializer));
-            }
+            context.Analyzers.Register<Gallop.SingleModeCheckEventResponse>(
+                AnalyzerKind.Response,
+                [EndpointPattern.Wildcard("/umamusume/single_mode*/check_event")],
+                invocation => Analyze(
+                    invocation.Payload.data.chara_info,
+                    invocation.Payload.data.unchecked_event_array));
+            context.Analyzers.Register<Gallop.SingleModeLoadResponse>(
+                AnalyzerKind.Response,
+                [EndpointPattern.Wildcard("/umamusume/single_mode*/load")],
+                invocation => Analyze(
+                    invocation.Payload.data.single_mode_load_common.chara_info,
+                    invocation.Payload.data.single_mode_load_common.unchecked_event_array));
+            context.Analyzers.Register<Gallop.SingleModeFinishResponse>(
+                AnalyzerKind.Response,
+                [EndpointPattern.Wildcard("/umamusume/single_mode*/finish")],
+                _ => AnalyzeFinish());
         }
 
-        private static void IgnoreDeserializeError(object? sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
+        public void Dispose() => RemoveWorkspace();
+
+        ValueTask Analyze(
+            Gallop.SingleModeChara charaInfo,
+            Gallop.SingleModeEventInfo[] uncheckedEvents)
         {
-            e.ErrorContext.Handled = true;
+            var shouldPublish = charaInfo.state is 2 or 3 && uncheckedEvents.Length == 0;
+            lock (trainingGate)
+            {
+                if (!shouldPublish)
+                    return ValueTask.CompletedTask;
+                var response = new Gallop.SingleModeCheckEventResponse
+                {
+                    data = new()
+                    {
+                        chara_info = charaInfo,
+                        unchecked_event_array = uncheckedEvents
+                    }
+                };
+                var display = ParseSkillTipsResponse(response);
+                workspace ??= Workspace.Create(WorkspaceTitle);
+                workspace.SetPanel(
+                    "skill-plan",
+                    "技能评分建议",
+                    SkillTipsDisplayRenderer.Render(display),
+                    fullBleed: true);
+                if (display.Warnings.Length != 0)
+                {
+                    workspace.Notify(
+                        string.Join(Environment.NewLine, display.Warnings),
+                        UiSeverity.Warning);
+                }
+            }
+
+            return ValueTask.CompletedTask;
         }
 
-        public static void ParseSkillTipsResponse(Gallop.SingleModeCheckEventResponse @event)
+        ValueTask AnalyzeFinish()
         {
+            RemoveWorkspace();
+            return ValueTask.CompletedTask;
+        }
+
+        void RemoveWorkspace()
+        {
+            lock (trainingGate)
+            {
+                workspace?.Remove();
+                workspace = null;
+            }
+        }
+
+        static SkillTipsDisplaySnapshot ParseSkillTipsResponse(Gallop.SingleModeCheckEventResponse @event)
+        {
+            var warnings = new List<string>();
             var skills = Database.Skills.Apply(@event.data.chara_info);
             ReplaceAllSkillWithUpgradeSkill(@event, skills, []);
-            var tips = CalculateSkillScoreCost(@event, skills, true);
+            var tips = CalculateSkillScoreCost(@event, skills, true, warnings);
             var totalSP = @event.data.chara_info.skill_point;
-            // 可以进化的天赋技能，即觉醒3、5的那两个金技能
-            var upgradableTalentSkills = Database.TalentSkill[@event.data.chara_info.card_id].Where(x => x.Rank <= @event.data.chara_info.talent_level && (x.Rank == 3 || x.Rank == 5));
-            var dpResult = DP(tips, ref totalSP, @event.data.chara_info);
+            var upgradableTalentSkills = Database.TalentSkill.TryGetValue(@event.data.chara_info.card_id, out var talentSkills)
+                ? talentSkills.Where(x => x.Rank <= @event.data.chara_info.talent_level && (x.Rank == 3 || x.Rank == 5))
+                : [];
+            var dpResult = DP(tips, ref totalSP);
             var learn = ReplaceAllSkillWithUpgradeSkill(@event, skills, dpResult.Item1).ToList();
             var willLearnPoint = learn.Sum(x => x.Grade);
 
-            var table = new Table();
-            table.Title(string.Format(I18N_Title, @event.data.chara_info.skill_point, @event.data.chara_info.skill_point - totalSP, totalSP));
-            table.AddColumns(I18N_Columns_SkillName, I18N_Columns_RequireSP, I18N_Columns_Grade);
-            table.Columns[0].Centered();
-            foreach (var i in learn)
-            {
-                table.AddRow($"{i.DisplayName}", $"{i.Cost}", $"{i.Grade}");
-            }
             var statusPoint = Database.StatusToPoint[@event.data.chara_info.speed]
                             + Database.StatusToPoint[@event.data.chara_info.stamina]
                             + Database.StatusToPoint[@event.data.chara_info.power]
                             + Database.StatusToPoint[@event.data.chara_info.guts]
                             + Database.StatusToPoint[@event.data.chara_info.wiz];
-            AnsiConsole.MarkupLine($"[yellow]速{@event.data.chara_info.speed} 耐{@event.data.chara_info.stamina} 力{@event.data.chara_info.power} 根{@event.data.chara_info.guts} 智{@event.data.chara_info.wiz} [/]");
-            var previousLearnPoint = 0; //之前学的技能的累计评价点
+
+            var previousLearnPoint = 0;
             foreach (var i in @event.data.chara_info.skill_array)
             {
-                if (i.skill_id > 1000000 && i.skill_id < 2000000) continue; // 嘉年华&LoH技能
-                if (i.skill_id.ToString()[0] == '1' && i.skill_id > 100000 && i.skill_id < 200000) //3*固有
+                if (i.skill_id > 1000000 && i.skill_id < 2000000) continue;
+                if (i.skill_id.ToString()[0] == '1' && i.skill_id > 100000 && i.skill_id < 200000)
                 {
                     previousLearnPoint += 170 * i.level;
                 }
-                else if (i.skill_id.ToString().Length == 5) //2*固有
+                else if (i.skill_id.ToString().Length == 5)
                 {
                     previousLearnPoint += 120 * i.level;
                 }
                 else
                 {
-                    var skill = skills[i.skill_id];
-                    if (skill == null) continue;
-                    var (GroupId, Rarity, Rate) = skills.Deconstruction(i.skill_id);
+                    if (!skills.TryFindById(i.skill_id, out var skill)) continue;
                     var upgradableSkills = upgradableTalentSkills.FirstOrDefault(x => x.SkillId == i.skill_id);
-                    // 学了可进化的技能，且满足进化条件，则按进化计算分数
                     if (upgradableSkills != default && upgradableSkills.CanUpgrade(@event.data.chara_info, out var upgradedSkillId, dpResult.Item1))
                     {
                         previousLearnPoint += skill.Upgrades.First(x => x.Id == upgradedSkillId).Grade;
@@ -134,63 +133,77 @@ namespace SkillTipsResponseAnalyzer
             }
             var totalPoint = willLearnPoint + previousLearnPoint + statusPoint;
             var thisLevelId = GradeRank.GradeToRank.First(x => x.Min <= totalPoint && totalPoint <= x.Max).Id;
-            table.Caption(string.Format(I18N_Caption, previousLearnPoint, willLearnPoint, statusPoint, totalPoint, GradeRank.GradeToRank.First(x => x.Id == thisLevelId).Rank));
-            AnsiConsole.Write(table);
-            AnsiConsole.MarkupLine(I18N_ScoreToNextGrade, GradeRank.GradeToRank.First(x => x.Id == thisLevelId + 1).Rank, GradeRank.GradeToRank.First(x => x.Id == thisLevelId + 1).Min - totalPoint);
-            AnsiConsole.MarkupLine(string.Empty);
+            var thisLevel = GradeRank.GradeToRank.First(x => x.Id == thisLevelId);
+            var nextLevel = GradeRank.GradeToRank.First(x => x.Id == thisLevelId + 1);
+            var rankProgress = Math.Clamp(
+                (double)(totalPoint - thisLevel.Min) / (nextLevel.Min - thisLevel.Min),
+                0d,
+                1d);
 
-            if (@event.IsScenario(ScenarioType.GrandMasters))
-            {
-                GameStats.Print();
-                AnsiConsole.MarkupLine(string.Empty);
-            }
-
-            AnsiConsole.MarkupLine(I18N_ScoreCalculateAttention_1);
-            AnsiConsole.MarkupLine(I18N_ScoreCalculateAttention_2);
-            AnsiConsole.MarkupLine(I18N_ScoreCalculateAttention_3);
-            AnsiConsole.MarkupLine(I18N_ScoreCalculateAttention_4);
-            AnsiConsole.MarkupLine(I18N_ScoreCalculateAttention_5);
-
-            #region 计算边际性价比与减少50/100/150/.../500pt的平均性价比
-            //计算平均性价比
             var dp = dpResult.Item2;
             var totalSP0 = @event.data.chara_info.skill_point;
-            if (totalSP0 > 0)
-                AnsiConsole.MarkupLine(I18N_AverageCostEffectiveness, ((double)willLearnPoint / totalSP0).ToString("F3"));
-            //计算边际性价比，对totalSP正负50的范围做线性回归
+            var averageCostEffectiveness = totalSP0 > 0
+                ? ((double)willLearnPoint / totalSP0).ToString("F3")
+                : null;
+            string? marginalCostEffectiveness = null;
             if (totalSP0 > 50)
             {
-                double sxy = 0, sy = 0, sx2 = 0, n = 0;
+                double sxy = 0, sx2 = 0;
                 for (var x = -50; x <= 50; x++)
                 {
                     var y = dp[totalSP0 + x];
                     sxy += x * y;
-                    sy += y;
                     sx2 += x * x;
-                    n += 1;
                 }
                 var b = sxy / sx2;
-                AnsiConsole.MarkupLine(I18N_MarginalCostEffectiveness, b.ToString("F3"));
+                marginalCostEffectiveness = b.ToString("F3");
             }
-            //计算减少50/100/150/.../500pt的平均性价比
-            AnsiConsole.MarkupLine(I18N_ExpectedCostEffectiveness);
+            var expectedCostEffectiveness = new List<SkillTipsCostEffectiveness>();
             for (var t = 1; t <= 10; t++)
             {
                 var start = totalSP0 - t * 50 - 25;
                 if (start < 0)
                     break;
 
-                //totalSP - t * 50 的前后25个取平均
                 var meanScoreReduced = dp.Skip(start).Take(51).Average();
                 var eff = (dp[totalSP0] - meanScoreReduced) / (t * 50);
-                AnsiConsole.MarkupLine(I18N_ExpectedCostEffectivenessByPrice, t * 50, eff.ToString("F3"));
+                expectedCostEffectiveness.Add(new(t * 50, eff.ToString("F3")));
             }
-            #endregion
+
+            return new(
+                @event.data.chara_info.speed,
+                @event.data.chara_info.stamina,
+                @event.data.chara_info.power,
+                @event.data.chara_info.guts,
+                @event.data.chara_info.wiz,
+                totalSP0,
+                totalSP0 - totalSP,
+                totalSP,
+                [.. learn.Select(x => new SkillTipsDisplaySkill(x.DisplayName, x.Cost, x.Grade))],
+                previousLearnPoint,
+                willLearnPoint,
+                statusPoint,
+                totalPoint,
+                thisLevel.Rank,
+                nextLevel.Rank,
+                nextLevel.Min - totalPoint,
+                rankProgress,
+                [
+                    I18N_ScoreCalculateAttention_1,
+                    I18N_ScoreCalculateAttention_2,
+                    I18N_ScoreCalculateAttention_3,
+                    I18N_ScoreCalculateAttention_4,
+                    I18N_ScoreCalculateAttention_5
+                ],
+                averageCostEffectiveness,
+                marginalCostEffectiveness,
+                [.. expectedCostEffectiveness],
+                [.. warnings]);
         }
+
         public static List<SkillData> ReplaceAllSkillWithUpgradeSkill(Gallop.SingleModeCheckEventResponse @event, SkillManager skillmanager, List<SkillData> willLearnSkills)
         {
             skillmanager.Evolve(@event.data.chara_info, willLearnSkills);
-            #region 角色进化
             foreach (var baseSkill in skillmanager.GetSkills().Where(x => !x.DisplayName.Contains($"角色{I18N_Evolved}") && x.Upgrades.Any(y => y.IsScenarioEvolution == false)))
             {
                 var best = baseSkill.Upgrades.Where(x => x.IsScenarioEvolution == false).OrderByDescending(x => x.Grade).First();
@@ -200,7 +213,6 @@ namespace SkillTipsResponseAnalyzer
                 var inferior = baseSkill.Inferior;
                 while (inferior != null)
                 {
-                    // 学了下位技能，则减去下位技能的分数
                     if (@event.data.chara_info.skill_array.Any(x => x.skill_id == inferior.Id))
                     {
                         best.Grade -= inferior.Grade;
@@ -209,14 +221,12 @@ namespace SkillTipsResponseAnalyzer
                     inferior = inferior.Inferior;
                 }
             }
-            #endregion
-            #region 剧本进化
-#warning TODO
+
             var scenarioSkills = skillmanager.GetSkills().Where(x => x.Upgrades.Any(y => y.IsScenarioEvolution == true)).OrderByDescending(x => x.Upgrades.Max(y => y.Grade));
-            var evolvedCount = scenarioSkills.Count(x => x.DisplayName.Contains($"剧本{I18N_Evolved}")); // 剧本进化最多两个，但是可进化的可能更多
+            var evolvedCount = scenarioSkills.Count(x => x.DisplayName.Contains($"剧本{I18N_Evolved}"));
             foreach (var baseSkill in scenarioSkills.Where(x => !x.DisplayName.Contains($"剧本{I18N_Evolved}")))
             {
-                if (evolvedCount == 2) break; // 剧本进化最多两个
+                if (evolvedCount == 2) break;
                 var best = baseSkill.Upgrades.Where(x => x.IsScenarioEvolution == true).OrderByDescending(x => x.Grade).First();
                 baseSkill.DisplayName = $"{baseSkill.DisplayName}(剧本{I18N_Evolved}->{best.DisplayName})";
                 baseSkill.Grade = best.Grade;
@@ -224,7 +234,6 @@ namespace SkillTipsResponseAnalyzer
                 var inferior = baseSkill.Inferior;
                 while (inferior != null)
                 {
-                    // 学了下位技能，则减去下位技能的分数
                     if (@event.data.chara_info.skill_array.Any(x => x.skill_id == inferior.Id))
                     {
                         best.Grade -= inferior.Grade;
@@ -234,48 +243,43 @@ namespace SkillTipsResponseAnalyzer
                 }
                 evolvedCount += 1;
             }
-            #endregion
             return willLearnSkills;
         }
 
-        //按技能性价比排序
         public static List<SkillData> CalculateSkillScoreCost(Gallop.SingleModeCheckEventResponse @event, SkillManager skills, bool removeInferiors)
+            => CalculateSkillScoreCost(@event, skills, removeInferiors, []);
+
+        static List<SkillData> CalculateSkillScoreCost(
+            Gallop.SingleModeCheckEventResponse @event,
+            SkillManager skills,
+            bool removeInferiors,
+            List<string> warnings)
         {
             var hasUnknownSkills = false;
             var tipsRaw = @event.data.chara_info.skill_tips_array;
-            var tipsNotExistInDatabase = tipsRaw.Where(x => skills[(x.group_id, x.rarity)] == null);//数据库中没有的技能
+            var tipsNotExistInDatabase = tipsRaw.Where(x => skills.FindByGroup(x.group_id, x.rarity).Length == 0);
             foreach (var i in tipsNotExistInDatabase)
             {
                 hasUnknownSkills = true;
                 var lineToPrint = string.Format(I18N_UnknownSkillAlert, i.group_id, i.rarity);
                 for (var rarity = 0; rarity < 10; rarity++)
                 {
-                    var maybeInferiorSkills = skills[(i.group_id, rarity)];
-                    if (maybeInferiorSkills != null)
+                    var maybeInferiorSkills = skills.FindByGroup(i.group_id, rarity);
+                    foreach (var inferiorSkill in maybeInferiorSkills)
                     {
-                        foreach (var inferiorSkill in maybeInferiorSkills)
-                        {
-                            lineToPrint += string.Format(I18N_UnknownSkillSuperiorSuppose, inferiorSkill.Name);
-                        }
+                        lineToPrint += string.Format(I18N_UnknownSkillSuperiorSuppose, inferiorSkill.Name);
                     }
                 }
-                AnsiConsole.MarkupLine($"[red]{lineToPrint}[/]");
+                warnings.Add(lineToPrint);
             }
-            //var tipsExistInDatabase = tipsRaw.Where(x => skills[(x.group_id, x.rarity)] != null);//去掉数据库中没有的技能，避免报错
-            //var tips = tipsExistInDatabase
-            //    .SelectMany(x => skills[(x.group_id, x.rarity)])
-            //    .Where(x => x.Rate > 0)
-            //    .ToList();
 
-            //把已买技能和它们的下位去掉
             foreach (var i in @event.data.chara_info.skill_array)
             {
-                if (i.skill_id > 1000000 && i.skill_id < 2000000) continue; // 嘉年华&LoH技能
-                var skill = skills[i.skill_id];
-                if (skill == null)
+                if (i.skill_id > 1000000 && i.skill_id < 2000000) continue;
+                if (!skills.TryFindById(i.skill_id, out var skill))
                 {
                     hasUnknownSkills = true;
-                    AnsiConsole.MarkupLine(I18N_UnknownBoughtSkillAlert, i.skill_id);
+                    warnings.Add(string.Format(I18N_UnknownBoughtSkillAlert, i.skill_id));
                     continue;
                 }
                 skill.Cost = int.MaxValue;
@@ -289,54 +293,41 @@ namespace SkillTipsResponseAnalyzer
                 }
             }
 
-            var tips = skills.GetSkills();
-            //添加天赋技能
-            var unknownUma = false;//新出的马娘的天赋技能不在数据库中
-            if (!Database.TalentSkill.ContainsKey(@event.data.chara_info.card_id))
-            {
-                unknownUma = true;
-            }
+            var tips = skills.GetSkills().ToList();
+            var unknownUma = !Database.TalentSkill.ContainsKey(@event.data.chara_info.card_id);
 
             if (removeInferiors)
             {
-                // 保证技能列表中的列表都是最上位技能（有下位技能则去除）
-                // 理想中tips里应只保留最上位技能，其所有的下位技能都去除
                 var inferiors = tips
-                        .SelectMany(x => skills.GetAllByGroupId(x.GroupId))
-                        .DistinctBy(x => x.Id)
-                        .OrderByDescending(x => x.Rarity)
-                        .ThenByDescending(x => x.Rate)
-                        .GroupBy(x => x.GroupId)
-                        .Where(x => x.Any())
-                        .SelectMany(x => tips.Where(y => y.GroupId == x.Key)
-                            .OrderByDescending(y => y.Rarity)
-                            .ThenByDescending(y => y.Rate)
-                            .Skip(1) //跳过当前有的最高级的hint
-                            .Select(y => y.Id));
-                tips.RemoveAll(x => inferiors.Contains(x.Id)); //只保留最上位技能，下位技能去除
+                    .SelectMany(x => skills.FindByGroup(x.GroupId))
+                    .DistinctBy(x => x.Id)
+                    .OrderByDescending(x => x.Rarity)
+                    .ThenByDescending(x => x.Rate)
+                    .GroupBy(x => x.GroupId)
+                    .Where(x => x.Any())
+                    .SelectMany(x => tips.Where(y => y.GroupId == x.Key)
+                        .OrderByDescending(y => y.Rarity)
+                        .ThenByDescending(y => y.Rate)
+                        .Skip(1)
+                        .Select(y => y.Id));
+                tips.RemoveAll(x => inferiors.Contains(x.Id));
             }
 
             if (unknownUma)
-            {
-                AnsiConsole.MarkupLine(I18N_UnknownUma, @event.data.chara_info.card_id);
-            }
+                warnings.Add(string.Format(I18N_UnknownUma, @event.data.chara_info.card_id));
             if (hasUnknownSkills)
-            {
-                AnsiConsole.MarkupLine(I18N_UnknownSkillExistAlert);
-            }
+                warnings.Add(I18N_UnknownSkillExistAlert);
             return tips;
         }
 
-        public static (List<SkillData>, int[]) DP(List<SkillData> tips, ref int totalSP, Gallop.SingleModeChara chara_info)
+        public static (List<SkillData>, int[]) DP(List<SkillData> tips, ref int totalSP)
         {
             var learn = new List<SkillData>();
-            // 01背包变种
-            var dp = new int[totalSP + 101]; //多计算100pt，用于计算“边际性价比”
-            var dpLog = Enumerable.Range(0, totalSP + 101).Select(x => new List<int>()).ToList(); // 记录dp时所选的技能，存技能Id
+            var dp = new int[totalSP + 101];
+            var dpLog = Enumerable.Range(0, totalSP + 101).Select(x => new List<int>()).ToList();
             for (var i = 0; i < tips.Count; i++)
             {
                 var s = tips[i];
-                // 读取此技能可以点的所有情况
                 int[] SuperiorId = [0, 0, 0];
                 int[] SuperiorCost = [int.MaxValue, int.MaxValue, int.MaxValue];
                 int[] SuperiorGrade = [int.MinValue, int.MinValue, int.MinValue];
@@ -367,30 +358,14 @@ namespace SkillTipsResponseAnalyzer
                 if (SuperiorGrade[2] == 0)
                     SuperiorCost[2] = int.MaxValue;
 
-                // 退化技能到最低级，方便选择
-
-
-
                 for (var j = totalSP + 100; j >= 0; j--)
                 {
-                    // 背包四种选法
-                    // 0-不选
-                    // 1-只选此技能
-                    // 2-选这个技能和它的上一级技能
-                    // 3-选这个技能的最高位技（全点）
                     var choice = new int[4];
                     choice[0] = dp[j];
-                    choice[1] = j - SuperiorCost[0] >= 0 ?
-                        dp[j - SuperiorCost[0]] + SuperiorGrade[0] :
-                        -1;
-                    choice[2] = j - SuperiorCost[1] >= 0 ?
-                        dp[j - SuperiorCost[1]] + SuperiorGrade[1] :
-                        -1;
-                    choice[3] =
-                        j - SuperiorCost[2] >= 0 ?
-                        dp[j - SuperiorCost[2]] + SuperiorGrade[2] :
-                        -1;
-                    // 判断是否为四种选法中的最优选择
+                    choice[1] = j - SuperiorCost[0] >= 0 ? dp[j - SuperiorCost[0]] + SuperiorGrade[0] : -1;
+                    choice[2] = j - SuperiorCost[1] >= 0 ? dp[j - SuperiorCost[1]] + SuperiorGrade[1] : -1;
+                    choice[3] = j - SuperiorCost[2] >= 0 ? dp[j - SuperiorCost[2]] + SuperiorGrade[2] : -1;
+
                     if (IsBestOption(0))
                     {
                         dp[j] = choice[0];
@@ -398,39 +373,28 @@ namespace SkillTipsResponseAnalyzer
                     else if (IsBestOption(1))
                     {
                         dp[j] = choice[1];
-                        dpLog[j] = new(dpLog[j - SuperiorCost[0]])
-                        {
-                            SuperiorId[0]
-                        };
+                        dpLog[j] = new(dpLog[j - SuperiorCost[0]]) { SuperiorId[0] };
                     }
                     else if (IsBestOption(2))
                     {
                         dp[j] = choice[2];
-                        dpLog[j] = new(dpLog[j - SuperiorCost[1]])
-                        {
-                            SuperiorId[1]
-                        };
+                        dpLog[j] = new(dpLog[j - SuperiorCost[1]]) { SuperiorId[1] };
                     }
                     else if (IsBestOption(3))
                     {
                         dp[j] = choice[3];
-                        dpLog[j] = new(dpLog[j - SuperiorCost[2]])
-                        {
-                            SuperiorId[2]
-                        };
+                        dpLog[j] = new(dpLog[j - SuperiorCost[2]]) { SuperiorId[2] };
                     }
 
                     bool IsBestOption(int index)
                     {
-                        var IsBest = true;
+                        var isBest = true;
                         for (var k = 0; k < 4; k++)
-                            IsBest = choice[index] >= choice[k] && IsBest;
-                        return IsBest;
+                            isBest = choice[index] >= choice[k] && isBest;
+                        return isBest;
                     }
-                    ;
                 }
             }
-            // 读取最终选择的技能
             var learnSkillId = dpLog[totalSP];
             foreach (var id in learnSkillId)
             {
@@ -444,22 +408,22 @@ namespace SkillTipsResponseAnalyzer
                         totalSP -= skill.Cost;
                         continue;
                     }
-                    else if (inferior != null && inferior.Id == id)
+                    if (inferior != null && inferior.Id == id)
                     {
                         learn.Add(inferior);
                         totalSP -= inferior.Cost;
                         continue;
                     }
-                    else if (inferiorest != null && inferiorest.Id == id)
+                    if (inferiorest != null && inferiorest.Id == id)
                     {
                         learn.Add(inferiorest);
                         totalSP -= inferiorest.Cost;
                     }
                 }
             }
-            //learn = [.. learn.OrderByDescending(x => x.HintLevel).ThenBy(x => x.DisplayOrder)];
             learn = [.. learn.OrderBy(x => x.DisplayOrder)];
             return (learn, dp);
         }
+
     }
 }

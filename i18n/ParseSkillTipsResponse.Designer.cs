@@ -19,7 +19,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ParseSkillTipsResponse {
@@ -47,8 +47,8 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   重写当前线程的 CurrentUICulture 属性，对
-        ///   使用此强类型资源类的所有资源查找执行重写。
+        ///   使用此强类型资源类，为所有资源查找
+        ///   重写当前线程的 CurrentUICulture 属性。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         public static global::System.Globalization.CultureInfo Culture {
@@ -61,7 +61,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [aqua]Average cost-effectiveness: {0}[/] 的本地化字符串。
+        ///   查找类似 Average cost-effectiveness: {0} 的本地化字符串。
         /// </summary>
         public static string I18N_AverageCostEffectiveness {
             get {
@@ -88,7 +88,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 Required skill points 的本地化字符串。
+        ///   查找类似 Skill points 的本地化字符串。
         /// </summary>
         public static string I18N_Columns_RequireSP {
             get {
@@ -102,6 +102,24 @@ namespace SkillTipsResponseAnalyzer.i18n {
         public static string I18N_Columns_SkillName {
             get {
                 return ResourceManager.GetString("I18N_Columns_SkillName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Cost-effectiveness 的本地化字符串。
+        /// </summary>
+        public static string I18N_CostEffectiveness {
+            get {
+                return ResourceManager.GetString("I18N_CostEffectiveness", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Current rank 的本地化字符串。
+        /// </summary>
+        public static string I18N_CurrentRank {
+            get {
+                return ResourceManager.GetString("I18N_CurrentRank", resourceCulture);
             }
         }
         
@@ -124,7 +142,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 And after recalculation, the total score [green]exceeds[/] the result when unable to evolve, please ensure to learn skills as recommended after both talent skills meet the evolution conditions 的本地化字符串。
+        ///   查找类似 And after recalculation, the total score exceeds the result when unable to evolve, please ensure to learn skills as recommended after both talent skills meet the evolution conditions 的本地化字符串。
         /// </summary>
         public static string I18N_EvolveSkillAlert_2 {
             get {
@@ -160,7 +178,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 And after recalculation, the total score [red]is below[/] the result when unable to evolve, therefore, recommendations are given as (all/part) skills cannot evolve 的本地化字符串。
+        ///   查找类似 And after recalculation, the total score is below the result when unable to evolve, therefore, recommendations are given as (all/part) skills cannot evolve 的本地化字符串。
         /// </summary>
         public static string I18N_EvolveSkillAlert_6 {
             get {
@@ -169,7 +187,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [aqua]The expected cost-effectiveness of skills at different prices is as follows. If the score of a skill is calculated incorrectly and is low and not listed above (in the above situations), please manually calculate the cost-effectiveness and compare with the table below[/] 的本地化字符串。
+        ///   查找类似 The expected cost-effectiveness of skills at different prices is as follows. If the score of a skill is calculated incorrectly and is low and not listed above (in the above situations), please manually calculate the cost-effectiveness and compare with the table below 的本地化字符串。
         /// </summary>
         public static string I18N_ExpectedCostEffectiveness {
             get {
@@ -178,7 +196,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [green]Expected cost-effectiveness of {0}pt skill: {1}[/] 的本地化字符串。
+        ///   查找类似 Expected cost-effectiveness of {0}pt skill: {1} 的本地化字符串。
         /// </summary>
         public static string I18N_ExpectedCostEffectivenessByPrice {
             get {
@@ -187,7 +205,25 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [aqua]Marginal cost-effectiveness: {0}[/] 的本地化字符串。
+        ///   查找类似 Guts 的本地化字符串。
+        /// </summary>
+        public static string I18N_Guts {
+            get {
+                return ResourceManager.GetString("I18N_Guts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Learned skill score 的本地化字符串。
+        /// </summary>
+        public static string I18N_LearnedSkillScore {
+            get {
+                return ResourceManager.GetString("I18N_LearnedSkillScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Marginal cost-effectiveness: {0} 的本地化字符串。
         /// </summary>
         public static string I18N_MarginalCostEffectiveness {
             get {
@@ -196,7 +232,61 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [yellow]Known issues [/] 的本地化字符串。
+        ///   查找类似 Power 的本地化字符串。
+        /// </summary>
+        public static string I18N_Power {
+            get {
+                return ResourceManager.GetString("I18N_Power", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Predicted rank 的本地化字符串。
+        /// </summary>
+        public static string I18N_PredictedRank {
+            get {
+                return ResourceManager.GetString("I18N_PredictedRank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Predicted total score 的本地化字符串。
+        /// </summary>
+        public static string I18N_PredictedTotalScore {
+            get {
+                return ResourceManager.GetString("I18N_PredictedTotalScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Recommended skills 的本地化字符串。
+        /// </summary>
+        public static string I18N_RecommendedSkills {
+            get {
+                return ResourceManager.GetString("I18N_RecommendedSkills", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Upcoming skill score 的本地化字符串。
+        /// </summary>
+        public static string I18N_RecommendedSkillScore {
+            get {
+                return ResourceManager.GetString("I18N_RecommendedSkillScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Remaining skill points 的本地化字符串。
+        /// </summary>
+        public static string I18N_RemainingSkillPoints {
+            get {
+                return ResourceManager.GetString("I18N_RemainingSkillPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Known issues 的本地化字符串。
         /// </summary>
         public static string I18N_ScoreCalculateAttention_1 {
             get {
@@ -205,7 +295,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [yellow]1. For skills that can only be judged whether they can evolve after learning, it may not be correctly judged. If there are evolvable skills that have not evolved above, please judge for yourself [/] 的本地化字符串。
+        ///   查找类似 1. For skills that can only be judged whether they can evolve after learning, it may not be correctly judged. If there are evolvable skills that have not evolved above, please judge for yourself 的本地化字符串。
         /// </summary>
         public static string I18N_ScoreCalculateAttention_2 {
             get {
@@ -214,7 +304,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [yellow]2. Purple (negative) skills not considered, please remove purple skills yourself [/] 的本地化字符串。
+        ///   查找类似 2. Purple (negative) skills not considered, please remove purple skills yourself 的本地化字符串。
         /// </summary>
         public static string I18N_ScoreCalculateAttention_3 {
             get {
@@ -223,7 +313,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [red]You can decide whether to buy the corresponding skills for the above situations. After buying, restart the game for recalculation [/] 的本地化字符串。
+        ///   查找类似 You can decide whether to buy the corresponding skills for the above situations. After buying, restart the game for recalculation 的本地化字符串。
         /// </summary>
         public static string I18N_ScoreCalculateAttention_4 {
             get {
@@ -232,7 +322,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [red]Below are some reference indicators [/] 的本地化字符串。
+        ///   查找类似 Below are some reference indicators 的本地化字符串。
         /// </summary>
         public static string I18N_ScoreCalculateAttention_5 {
             get {
@@ -241,11 +331,47 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 {0} is [yellow]{1}[/] points away 的本地化字符串。
+        ///   查找类似 Score summary 的本地化字符串。
+        /// </summary>
+        public static string I18N_ScoreSummary {
+            get {
+                return ResourceManager.GetString("I18N_ScoreSummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 {0} is {1} points away 的本地化字符串。
         /// </summary>
         public static string I18N_ScoreToNextGrade {
             get {
                 return ResourceManager.GetString("I18N_ScoreToNextGrade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Speed 的本地化字符串。
+        /// </summary>
+        public static string I18N_Speed {
+            get {
+                return ResourceManager.GetString("I18N_Speed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Stamina 的本地化字符串。
+        /// </summary>
+        public static string I18N_Stamina {
+            get {
+                return ResourceManager.GetString("I18N_Stamina", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Attribute score 的本地化字符串。
+        /// </summary>
+        public static string I18N_StatusScore {
+            get {
+                return ResourceManager.GetString("I18N_StatusScore", resourceCulture);
             }
         }
         
@@ -259,7 +385,16 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [red]Warning: Unknown purchased skill, id={0}[/] 的本地化字符串。
+        ///   查找类似 Total skill points 的本地化字符串。
+        /// </summary>
+        public static string I18N_TotalSkillPoints {
+            get {
+                return ResourceManager.GetString("I18N_TotalSkillPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Warning: Unknown purchased skill, id={0} 的本地化字符串。
         /// </summary>
         public static string I18N_UnknownBoughtSkillAlert {
             get {
@@ -277,7 +412,7 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [red]Warning: There are unknown skills[/] 的本地化字符串。
+        ///   查找类似 Warning: There are unknown skills 的本地化字符串。
         /// </summary>
         public static string I18N_UnknownSkillExistAlert {
             get {
@@ -295,11 +430,29 @@ namespace SkillTipsResponseAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [red]Unknown Uma Musume: {0}, unable to obtain awakening skills, please decide whether to buy yourself.[/] 的本地化字符串。
+        ///   查找类似 Unknown Uma Musume: {0}, unable to obtain awakening skills, please decide whether to buy yourself. 的本地化字符串。
         /// </summary>
         public static string I18N_UnknownUma {
             get {
                 return ResourceManager.GetString("I18N_UnknownUma", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Used skill points 的本地化字符串。
+        /// </summary>
+        public static string I18N_UsedSkillPoints {
+            get {
+                return ResourceManager.GetString("I18N_UsedSkillPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Wisdom 的本地化字符串。
+        /// </summary>
+        public static string I18N_Wisdom {
+            get {
+                return ResourceManager.GetString("I18N_Wisdom", resourceCulture);
             }
         }
     }

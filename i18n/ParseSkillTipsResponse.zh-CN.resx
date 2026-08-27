@@ -124,7 +124,7 @@
     <value>评价点</value>
   </data>
   <data name="I18N_Columns_RequireSP" xml:space="preserve">
-    <value>需要技能点数</value>
+    <value>技能点</value>
   </data>
   <data name="I18N_Columns_SkillName" xml:space="preserve">
     <value>技能名</value>
@@ -136,7 +136,7 @@
     <value>由于有技能不满足进化条件，本次结果以&lt;有技能无法进化时的最大化推荐&gt;为基准进行二次计算</value>
   </data>
   <data name="I18N_EvolveSkillAlert_2" xml:space="preserve">
-    <value>且二次计算后的总分[green]高于[/]无法进化时的结果，请确保按推荐学完技能之后两个天赋技能均满足进化条件</value>
+    <value>且二次计算后的总分高于无法进化时的结果，请确保按推荐学完技能之后两个天赋技能均满足进化条件</value>
   </data>
   <data name="I18N_EvolveSkillAlert_3" xml:space="preserve">
     <value>如遇到此提示，请打开选项中的"保存用于调试的通讯包"后再次进入育成界面</value>
@@ -148,40 +148,40 @@
     <value>由于有技能不满足进化条件，本次结果以&lt;有技能无法进化时的最大化推荐&gt;为基准进行二次计算</value>
   </data>
   <data name="I18N_EvolveSkillAlert_6" xml:space="preserve">
-    <value>且二次计算后的总分[red]低于[/]无法进化时的结果，因此按(全部/部分)技能无法进化给出建议</value>
+    <value>且二次计算后的总分低于无法进化时的结果，因此按(全部/部分)技能无法进化给出建议</value>
   </data>
   <data name="I18N_Evolved" xml:space="preserve">
     <value>进化</value>
   </data>
   <data name="I18N_AverageCostEffectiveness" xml:space="preserve">
-    <value>[aqua]平均性价比：{0}[/]</value>
+    <value>平均性价比：{0}</value>
   </data>
   <data name="I18N_ExpectedCostEffectiveness" xml:space="preserve">
-    <value>[aqua]不同价格的技能的期望性价比如下，若某技能的评分计算错误且偏低且没有出现在上表中（以上几种情况），请手动计算性价比与下表进行比较[/]</value>
+    <value>不同价格的技能的期望性价比如下，若某技能的评分计算错误且偏低且没有出现在上表中（以上几种情况），请手动计算性价比与下表进行比较</value>
   </data>
   <data name="I18N_ExpectedCostEffectivenessByPrice" xml:space="preserve">
-    <value>[green]{0}pt技能的期望性价比：{1}[/]</value>
+    <value>{0}pt技能的期望性价比：{1}</value>
   </data>
   <data name="I18N_MarginalCostEffectiveness" xml:space="preserve">
-    <value>[aqua]边际性价比：{0}[/]</value>
+    <value>边际性价比：{0}</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_1" xml:space="preserve">
-    <value>[yellow]已知问题 [/]</value>
+    <value>已知问题</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_2" xml:space="preserve">
-    <value>[yellow]1.对于学习技能后才能判定是否能进化的技能，可能无法正确判断。若以上存在没有进化的可进化技能，请自行判断 [/]</value>
+    <value>1.对于学习技能后才能判定是否能进化的技能，可能无法正确判断。若以上存在没有进化的可进化技能，请自行判断</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_3" xml:space="preserve">
-    <value>[yellow]2.没考虑紫色（负面）技能，请自己解除紫色技能 [/]</value>
+    <value>2.没考虑紫色（负面）技能，请自己解除紫色技能</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_4" xml:space="preserve">
-    <value>[red]以上几种情况可以自己决定是否购买相应技能，购买之后重启游戏，即可重新计算 [/]</value>
+    <value>以上几种情况可以自己决定是否购买相应技能，购买之后重启游戏，即可重新计算</value>
   </data>
   <data name="I18N_ScoreCalculateAttention_5" xml:space="preserve">
-    <value>[red]以下是一些参考指标 [/]</value>
+    <value>以下是一些参考指标</value>
   </data>
   <data name="I18N_ScoreToNextGrade" xml:space="preserve">
-    <value>距离{0}还有[yellow]{1}[/]分</value>
+    <value>距离{0}还有{1}分</value>
   </data>
   <data name="I18N_UnknownSkillAlert" xml:space="preserve">
     <value>警告：未知技能，group_id={0}, rarity={1}</value>
@@ -190,12 +190,63 @@
     <value>，可能是 {0} 的上位技能</value>
   </data>
   <data name="I18N_UnknownBoughtSkillAlert" xml:space="preserve">
-    <value>[red]警告：未知已购买技能，id={0}[/]</value>
+    <value>警告：未知已购买技能，id={0}</value>
   </data>
   <data name="I18N_UnknownUma" xml:space="preserve">
-    <value>[red]未知马娘：{0}，无法获取觉醒技能，请自己决定是否购买。[/]</value>
+    <value>未知马娘：{0}，无法获取觉醒技能，请自己决定是否购买。</value>
   </data>
   <data name="I18N_UnknownSkillExistAlert" xml:space="preserve">
-    <value>[red]警告：存在未知技能[/]</value>
+    <value>警告：存在未知技能</value>
+  </data>
+  <data name="I18N_RecommendedSkills" xml:space="preserve">
+    <value>推荐技能</value>
+  </data>
+  <data name="I18N_ScoreSummary" xml:space="preserve">
+    <value>评分摘要</value>
+  </data>
+  <data name="I18N_CostEffectiveness" xml:space="preserve">
+    <value>性价比</value>
+  </data>
+  <data name="I18N_Speed" xml:space="preserve">
+    <value>速度</value>
+  </data>
+  <data name="I18N_Stamina" xml:space="preserve">
+    <value>耐力</value>
+  </data>
+  <data name="I18N_Power" xml:space="preserve">
+    <value>力量</value>
+  </data>
+  <data name="I18N_Guts" xml:space="preserve">
+    <value>根性</value>
+  </data>
+  <data name="I18N_Wisdom" xml:space="preserve">
+    <value>智力</value>
+  </data>
+  <data name="I18N_TotalSkillPoints" xml:space="preserve">
+    <value>总技能点</value>
+  </data>
+  <data name="I18N_UsedSkillPoints" xml:space="preserve">
+    <value>使用技能点</value>
+  </data>
+  <data name="I18N_RemainingSkillPoints" xml:space="preserve">
+    <value>剩余技能点</value>
+  </data>
+  <data name="I18N_LearnedSkillScore" xml:space="preserve">
+    <value>已学习技能评分</value>
+  </data>
+  <data name="I18N_RecommendedSkillScore" xml:space="preserve">
+    <value>即将学习技能评分</value>
+  </data>
+  <data name="I18N_StatusScore" xml:space="preserve">
+    <value>属性评分</value>
+  </data>
+  <data name="I18N_PredictedTotalScore" xml:space="preserve">
+    <value>预测总分</value>
+  </data>
+  <data name="I18N_CurrentRank" xml:space="preserve">
+    <value>当前等级</value>
+  </data>
+  <data name="I18N_PredictedRank" xml:space="preserve">
+    <value>预测等级</value>
   </data>
 </root>
