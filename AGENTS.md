@@ -6,24 +6,25 @@
 - `SkillTipsDisplayRenderer.cs` renders immutable display snapshots with Terminal.Gui.
 - `GradeRank.cs` contains score thresholds and rank labels.
 - `i18n/ParseSkillTipsResponse*.resx` contains user-facing text.
-- The dedicated smoke project is `..\tests\SkillTipsResponseAnalyzerSmoke` and is outside this Git root.
+- The dedicated smoke project is `tests/SkillTipsResponseAnalyzerSmoke`.
 
 ## Build Safety
 
-Keep `<IsUraPlugin>true</IsUraPlugin>` in `SkillTipsResponseAnalyzer.csproj`. The umbrella repository's `Directory.Build.targets` supplies the Host project reference and package targets; do not add Host contract NuGet packages or a project-local Host reference.
+Keep `<IsUraPlugin>true</IsUraPlugin>` in `SkillTipsResponseAnalyzer.csproj`. The repository-owned build files import the pinned Host build contract; do not add Host contract NuGet packages or another Host project reference.
 
 From this repository, build without packaging or local deployment:
 
 ```powershell
-dotnet build .\SkillTipsResponseAnalyzer.csproj -c Release -m:1 -p:UraHostProjectPath="<ura-host-project>" -p:GenerateUraPluginManifestOnBuild=false -p:PackageUraPluginOnBuild=false -p:DeployUraPluginToLocalAppDataOnBuild=false
+git -c core.longpaths=true submodule update --init --recursive
+dotnet build .\SkillTipsResponseAnalyzer.csproj -c Release -m:1 -p:RuntimeIdentifier=win-x64 -p:SelfContained=false -p:PlatformTarget=AnyCPU -p:DeployUraPluginToLocalAppDataOnBuild=false
 ```
 
 ## Smoke Test
 
-From the `URA-Plugins` umbrella root:
+From this repository root:
 
 ```powershell
-dotnet run --project .\tests\SkillTipsResponseAnalyzerSmoke\SkillTipsResponseAnalyzerSmoke.csproj -c Release -m:1 -p:UraHostProjectPath="<ura-host-project>" -p:GenerateUraPluginManifestOnBuild=false -p:PackageUraPluginOnBuild=false -p:DeployUraPluginToLocalAppDataOnBuild=false
+dotnet run --project .\tests\SkillTipsResponseAnalyzerSmoke\SkillTipsResponseAnalyzerSmoke.csproj -c Release -p:GenerateUraPluginManifestOnBuild=false -p:PackageUraPluginOnBuild=false -p:DeployUraPluginToLocalAppDataOnBuild=false
 ```
 
 Pass a raw Ramen `check_event` or `load` MessagePack body as the final argument when replay coverage is required.
