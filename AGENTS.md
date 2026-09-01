@@ -6,22 +6,21 @@
 - `SkillTipsDisplayRenderer.cs` renders immutable display snapshots with Terminal.Gui.
 - `GradeRank.cs` contains score thresholds and rank labels.
 - `i18n/ParseSkillTipsResponse*.resx` contains user-facing text.
-- The dedicated smoke project is `tests/SkillTipsResponseAnalyzerSmoke`.
+- The Host-dependent smoke project is `URA-Plugins.Integration/tests/SkillTipsResponseAnalyzerSmoke`.
 
 ## Build Safety
 
-Keep `<IsUraPlugin>true</IsUraPlugin>` in `SkillTipsResponseAnalyzer.csproj`. The repository-owned build files import the pinned Host build contract; do not add Host contract NuGet packages or another Host project reference.
+Keep `<IsUraPlugin>true</IsUraPlugin>` and the pinned `UmamusumeResponseAnalyzer` package reference in `SkillTipsResponseAnalyzer.csproj`; do not add a Host project reference.
 
 From this repository, build without packaging or local deployment:
 
 ```powershell
-git -c core.longpaths=true submodule update --init --recursive
 dotnet build .\SkillTipsResponseAnalyzer.csproj -c Release -m:1 -p:RuntimeIdentifier=win-x64 -p:SelfContained=false -p:PlatformTarget=AnyCPU -p:DeployUraPluginToLocalAppDataOnBuild=false
 ```
 
 ## Smoke Test
 
-From this repository root:
+From the Integration repository root:
 
 ```powershell
 dotnet run --project .\tests\SkillTipsResponseAnalyzerSmoke\SkillTipsResponseAnalyzerSmoke.csproj -c Release -p:GenerateUraPluginManifestOnBuild=false -p:PackageUraPluginOnBuild=false -p:DeployUraPluginToLocalAppDataOnBuild=false
