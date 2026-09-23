@@ -25,6 +25,7 @@ using UmamusumeResponseAnalyzer.Plugin;
 using static SkillTipsResponseAnalyzer.i18n.ParseSkillTipsResponse;
 using SkillTipsPlugin = SkillTipsResponseAnalyzer.SkillTipsResponseAnalyzer;
 using UraSkillData = UmamusumeResponseAnalyzer.Entities.SkillData;
+using UiText = UmamusumeResponseAnalyzer.Localization.TerminalGui;
 
 if (args.Length > 1)
     throw new ArgumentException("Expected at most one raw SingleModeRamen CheckEvent or Load response path.");
@@ -86,7 +87,7 @@ try
     var ramenSentinel = RamenWarningCardId.ToString(CultureInfo.InvariantCulture);
     var ramenLinesBefore = ui.CaptureScreen().ReplaceLineEndings("\n").Split('\n');
     var warningsBeforeRamen = ramenLinesBefore
-        .Where(line => line.Contains("WARN ", StringComparison.Ordinal))
+        .Where(line => line.Contains(UiText.Severity_Warning, StringComparison.Ordinal))
         .ToArray();
     AssertTrue(
         ramenLinesBefore.All(line => !line.Contains(ramenSentinel, StringComparison.Ordinal)),
@@ -110,14 +111,14 @@ try
     AssertPanelContract(ui, workspace, "SingleModeRamen.Load");
     var ramenLinesAfter = ui.CaptureScreen().ReplaceLineEndings("\n").Split('\n');
     var warningsAfterRamen = ramenLinesAfter
-        .Where(line => line.Contains("WARN ", StringComparison.Ordinal))
+        .Where(line => line.Contains(UiText.Severity_Warning, StringComparison.Ordinal))
         .ToArray();
     AssertTrue(
         warningsAfterRamen.Length > warningsBeforeRamen.Length,
         "The Ramen dispatch must append a visible Warning notification.");
     var notificationHeaderIndexes = Enumerable.Range(0, ramenLinesAfter.Length - 1)
         .Where(index =>
-            ramenLinesAfter[index].Contains("WARN ", StringComparison.Ordinal)
+            ramenLinesAfter[index].Contains(UiText.Severity_Warning, StringComparison.Ordinal)
             && ramenLinesAfter[index + 1].Contains(ramenSentinel, StringComparison.Ordinal))
         .ToArray();
     AssertEqual(
@@ -127,7 +128,7 @@ try
     var notificationHeaderIndex = notificationHeaderIndexes[0];
     var notificationHeader = ramenLinesAfter[notificationHeaderIndex];
     AssertTrue(
-        notificationHeader.Contains("WARN ", StringComparison.Ordinal)
+        notificationHeader.Contains(UiText.Severity_Warning, StringComparison.Ordinal)
         && !notificationHeader.Contains("SkillTipsResponseAnalyzer", StringComparison.Ordinal),
         "The newest visible Warning card must show severity without a hidden plugin source.");
     AssertTrue(
@@ -193,7 +194,7 @@ try
     }
 
     var disposedWorkspace = RequireSkillTipsWorkspace(ui);
-    plugin.Dispose();
+    await plugin.DisposeAsync();
     AssertNoSkillTipsWorkspace(ui, "Dispose must remove the owned SkillTips workspace.");
     AssertThrows<InvalidOperationException>(
         disposedWorkspace.SwitchTo,
@@ -223,7 +224,7 @@ try
         "Final finish must remove the SkillTips panel.");
     AssertTrue(
         !ReferenceEquals(Workspace.Current, replacementWorkspace)
-        && !ui.CaptureScreen().Contains("WARN ", StringComparison.Ordinal),
+        && !ui.CaptureScreen().Contains(UiText.Severity_Warning, StringComparison.Ordinal),
         "Final finish must clear visible state for the tombstoned generation.");
 
     AssertThrows<InvalidOperationException>(
@@ -242,9 +243,9 @@ try
         !ui.CaptureScreen().Contains(I18N_RecommendedSkills, StringComparison.Ordinal),
         "A late callback must not pollute the replacement workspace generation.");
     AssertTrue(
-        !ui.CaptureScreen().Contains("WARN ", StringComparison.Ordinal),
+        !ui.CaptureScreen().Contains(UiText.Severity_Warning, StringComparison.Ordinal),
         "A late callback must not add telemetry to the replacement workspace generation.");
-    replacementPlugin.Dispose();
+    await replacementPlugin.DisposeAsync();
     AssertTrue(
         ReferenceEquals(nextGeneration, Workspace.Create("SkillTipsResponseAnalyzer"))
         && !ui.CaptureScreen().Contains(I18N_RecommendedSkills, StringComparison.Ordinal),
@@ -341,7 +342,7 @@ static void AssertPanelContract(
 {
     AssertSkillPlanPanelContract(ui, workspace, endpoint);
     AssertTrue(
-        ui.CaptureScreen().Contains("WARN ", StringComparison.Ordinal),
+        ui.CaptureScreen().Contains(UiText.Severity_Warning, StringComparison.Ordinal),
         $"{endpoint} must publish a visible Warning notification.");
 }
 
@@ -905,7 +906,7 @@ static async ValueTask AssertAnalysisEndpointDispatch(
         var resultWithWarning = ui.CaptureScreen(320, 96);
         var warning = resultWithWarning.ReplaceLineEndings("\n")
             .Split('\n')
-            .Last(line => line.Contains("WARN ", StringComparison.Ordinal));
+            .Last(line => line.Contains(UiText.Severity_Warning, StringComparison.Ordinal));
         var result = ui.CaptureScreen(60, 96);
         if (expectedResult is null)
         {
@@ -1171,19 +1172,11 @@ sealed class SmokePluginContext : IPluginContext
     }
 
     public IApplication Application { get; }
-    public IPluginHostEvents Events { get; } = new ThrowingPluginHostEvents();
     public SmokeAnalyzerRegistry AnalyzerRegistry { get; }
     public IPluginAnalyzerRegistry Analyzers => AnalyzerRegistry;
     public bool IsPluginAvailable(string internalName) => false;
 
-    public void RunBackground(Func<CancellationToken, ValueTask> operation)
-        => throw new NotSupportedException("SkillTips smoke does not use background operations.");
-}
-
-sealed class ThrowingPluginHostEvents : IPluginHostEvents
-{
-    public void OnStarted(Func<CancellationToken, ValueTask> handler)
-        => throw new NotSupportedException("SkillTips smoke does not use host events.");
+    public void ReportBackgroundFailure(Exception error) => throw new InvalidOperationException("Unexpected plugin background failure.", error);
 }
 
 sealed class SmokeAnalyzerRegistry : IPluginAnalyzerRegistry

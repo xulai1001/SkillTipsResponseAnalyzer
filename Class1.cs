@@ -33,7 +33,11 @@ namespace SkillTipsResponseAnalyzer
                 _ => AnalyzeFinish());
         }
 
-        public void Dispose() => RemoveWorkspace();
+        public ValueTask DisposeAsync()
+        {
+            RemoveWorkspace();
+            return ValueTask.CompletedTask;
+        }
 
         ValueTask Analyze(
             Gallop.SingleModeChara charaInfo,
